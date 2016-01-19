@@ -163,9 +163,9 @@ task RPMLoop2()
 
 task flyPID()
 {
-	float kp = 0.025;
+	float kp = 0.05;
 	float ki = 0;
-	float kd = 0.00;
+	float kd = 0.15;
 	int error = 0;
 	int sigmaError = 0;
 	int deltaError = 0;
@@ -173,10 +173,7 @@ task flyPID()
 
 	while(true)
 	{
-		if(targetRPM > 0)
-			error = targetRPM - RPM;
-		else
-			error = 0;
+		error = targetRPM - RPM;
 		if(error > integralThreshold)
 			sigmaError += error;
 		else
