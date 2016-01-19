@@ -125,7 +125,7 @@ task RPMLoop()
 			resetTimer(T1);
 			oldTime = getTimer(T1,milliseconds);
 		}
-		else if	((getTimer(T1,milliseconds) - oldTime) > 2000)
+		else if	((getTimer(T1,milliseconds) - oldTime) > 100)
 			RPM = 0;
 	}
 }
