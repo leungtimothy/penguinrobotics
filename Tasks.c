@@ -110,6 +110,7 @@ task flyPID()
 	int sigmaError = 0;
 	int deltaError = 0;
 	int previousError = 0;
+	int PID = 0;
 
 	while(true)
 	{
@@ -119,11 +120,13 @@ task flyPID()
 		else
 			sigmaError = 0;
 		deltaError = error - previousError;
-		motorOutput += error * kp + sigmaError * ki + deltaError * kd;
-		if(motorOutput > 127)
+		PID += error * kp + sigmaError * ki + deltaError * kd;
+		if(PID > 127)
 			motorOutput = 127;
-		if(motorOutput < 0)
+		else if(PID < 0)
 			motorOutput = 0;
+		else
+			motorOutput = PID;
 		previousError = error;
 		writeDebugStream("%i\n", motorOutput);
 	}
@@ -134,6 +137,6 @@ task pidControl()
 	while(true)
 	{
 		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = motorOutput;
-		motor[FlyTop] =FlyTop1;
+		motor[FlyTop] = FlyTop1;
 	}
 }
