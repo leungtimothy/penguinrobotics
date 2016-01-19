@@ -38,6 +38,7 @@ float offset = 0;
 float battery = 0;
 float flywheelTicks = 0;
 int FlyTop1 = 0;
+int PIDOutput = 0;
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 #include "Tasks.c"	// file contains tasks
