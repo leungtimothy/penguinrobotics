@@ -27,11 +27,10 @@
 
 #define flyThreshold 1000
 #define ballThreshold 2500
-#define integralThreshold 25
+#define integralThreshold 0
 
 int flywheelSpeed = 0;
 int motorOutput = 0;
-int PIDOutput = 0;
 float RPM = 0;
 float currTick = 0;
 float targetRPM = 0;
@@ -170,7 +169,7 @@ task usercontrol()
 			}
 			btn7DPressed = true;
 		}
-		else if(vexRT[Btn7D] == 0) //&& btn7DPressed == true)
+			else if(vexRT[Btn7D] == 0) //&& btn7DPressed == true)
 			btn7DPressed = false;
 
 
