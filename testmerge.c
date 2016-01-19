@@ -1,1 +1,3 @@
-some test file
+//some test file
+
+//merge test 2
