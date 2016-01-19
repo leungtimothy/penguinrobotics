@@ -55,9 +55,9 @@ task RPMLoop()
 	float oldTime = getTimer(T1,milliseconds);
 	while(true)
 	{
+		float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
 		if(flywheelTicks == 5)
 		{
-			float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
 			//writeDebugStream("timeElapsed = %f\n", timeElapsed);
 			RPM = 60000/timeElapsed;
 			//writeDebugStream("%f, %i\n", RPM, targetRPM);
@@ -68,8 +68,11 @@ task RPMLoop()
 			resetTimer(T1);
 			oldTime = getTimer(T1,milliseconds);
 		}
-		else if	((getTimer(T1,milliseconds) - oldTime) > 2000)
+		else if	(timeElapsed > 2000)
+		{
 			RPM = 0;
+			PIDOutput = 0;
+		}
 	}
 }
 
@@ -103,14 +106,13 @@ task RPMLoop2()
 
 task flyPID()
 {
-	float kp = 0.075;
-	float ki = 0.01;
-	float kd = 0.2;
+	float kp = 0.0005;
+	float ki = 2;
+	float kd = 1;
 	int error = 0;
 	int sigmaError = 0;
 	int deltaError = 0;
 	int previousError = 0;
-	int PID = 0;
 
 	while(true)
 	{
@@ -119,16 +121,18 @@ task flyPID()
 			sigmaError += error;
 		else
 			sigmaError = 0;
+		if(sigmaError > 50)
+			sigmaError = 50;
 		deltaError = error - previousError;
-		PID += error * kp + sigmaError * ki + deltaError * kd;
-		if(PID > 127)
-			PID = 127;
-		else if(PID < 0)
-			PID = 0;
-		else
-			motorOutput = PID;
+		PIDOutput += error * kp + sigmaError * ki + deltaError * kd;
+		if(PIDOutput > 127)
+			PIDOutput = 127;
+		else if(PIDOutput < 0)
+			PIDOutput = 0;
+		motorOutput = PIDOutput;
 		previousError = error;
-		writeDebugStream("%i\n", motorOutput);
+		if (PIDOutput != 0)
+			writeDebugStream("Output: %i\t\tP: %i\t\tI: %i\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
 	}
 }
 
