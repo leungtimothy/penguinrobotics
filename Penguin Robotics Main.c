@@ -26,6 +26,7 @@
 #pragma userControlDuration(120)
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "Tasks.c"	// file contains tasks 
 
 #define flyThreshold 1000
 #define ballThreshold 2500
@@ -84,6 +85,7 @@ void pre_auton()
 	// Example: clearing encoders, setting servo positions, ...
 }
 
+<<<<<<< HEAD
 bool checkFlywheel()
 {
 	if(SensorValue[flyEncoder] > flyThreshold)
@@ -195,6 +197,8 @@ task pidControl()
 	}
 }
 
+=======
+>>>>>>> origin/David-Z
 //task RPMLoop()
 //{
 //	while(true)
