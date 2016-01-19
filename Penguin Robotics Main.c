@@ -29,8 +29,7 @@
 
 #define flyThreshold 1000
 #define ballThreshold 2500
-#define integralThresholdL 0
-#define integralThresholdH 0
+#define integralThreshold 0
 
 int flywheelSpeed = 0;
 int motorOutput = 0;
@@ -123,7 +122,7 @@ task RPMLoop()
 			float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
 			//writeDebugStream("timeElapsed = %f\n", timeElapsed);
 			RPM = 60000/timeElapsed;
-			writeDebugStream("%f, %i\n", RPM, targetRPM);
+			//writeDebugStream("%f, %i\n", RPM, targetRPM);
 			//datalogDataGroupStart();
 			//datalogAddValue( 0, RPM );
 			//datalogDataGroupEnd();
@@ -164,7 +163,7 @@ task RPMLoop2()
 
 task flyPID()
 {
-	float kp = 0.5;
+	float kp = 0.025;
 	float ki = 0;
 	float kd = 0.00;
 	int error = 0;
@@ -178,17 +177,18 @@ task flyPID()
 			error = targetRPM - RPM;
 		else
 			error = 0;
-		if(abs(error) < integralThresholdL && abs(error) > integralThresholdH)
+		if(error > integralThreshold)
 			sigmaError += error;
 		else
 			sigmaError = 0;
 		deltaError = error - previousError;
-		motorOutput = error * kp + sigmaError * ki + deltaError * kd;
+		motorOutput += error * kp + sigmaError * ki + deltaError * kd;
 		if(motorOutput > 127)
 			motorOutput = 127;
 		if(motorOutput < 0)
 			motorOutput = 0;
 		previousError = error;
+		writeDebugStream("%i\n", motorOutput);
 	}
 }
 
