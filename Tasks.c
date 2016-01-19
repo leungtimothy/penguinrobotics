@@ -122,9 +122,9 @@ task flyPID()
 		deltaError = error - previousError;
 		PID += error * kp + sigmaError * ki + deltaError * kd;
 		if(PID > 127)
-			motorOutput = 127;
+			PID = 127;
 		else if(PID < 0)
-			motorOutput = 0;
+			PID = 0;
 		else
 			motorOutput = PID;
 		previousError = error;
