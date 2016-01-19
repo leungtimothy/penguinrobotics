@@ -110,11 +110,6 @@ task RPMLoop()
 {
 	resetTimer(T1);
 	float oldTime = getTimer(T1,milliseconds);
-
-	//for(int n = 0; n < 5; n++){ //TAKING THE FLYWHEEL RPM AVERAGE
-	//	flyWheelFilter[n] = 0;
-	//}
-
 	while(true)
 	{
 		if(flywheelTicks == 5)
@@ -130,6 +125,8 @@ task RPMLoop()
 			resetTimer(T1);
 			oldTime = getTimer(T1,milliseconds);
 		}
+		else if	((getTimer(T1,milliseconds) - oldTime) > 2000)
+			RPM = 0;
 	}
 }
 
@@ -163,9 +160,9 @@ task RPMLoop2()
 
 task flyPID()
 {
-	float kp = 0.05;
-	float ki = 0;
-	float kd = 0.15;
+	float kp = 0.075;
+	float ki = 0.01;
+	float kd = 0.2;
 	int error = 0;
 	int sigmaError = 0;
 	int deltaError = 0;
