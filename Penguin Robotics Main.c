@@ -1,18 +1,21 @@
-#pragma config(Sensor, in1,    flyEncoder,     sensorLineFollower)
+#pragma config(Sensor, in1,    ballSensorTop,  sensorLineFollower)
 #pragma config(Sensor, in2,    ballSensorBottom, sensorLineFollower)
-#pragma config(Sensor, in3,    ballSensorTop,  sensorLineFollower)
-#pragma config(Sensor, dgtl1,  flywheelSwitch, sensorTouch)
-#pragma config(Sensor, dgtl12, intakepiston,   sensorDigitalOut)
+#pragma config(Sensor, in7,    gyro,           sensorGyro)
+#pragma config(Sensor, in8,    flyEncoder,     sensorLineFollower)
+#pragma config(Sensor, dgtl1,  intakepiston,   sensorDigitalOut)
+#pragma config(Sensor, dgtl7,  leftEncoder,    sensorQuadEncoder)
+#pragma config(Sensor, dgtl9,  rightEncoder,   sensorQuadEncoder)
+#pragma config(Sensor, dgtl11, ballSONAR,      sensorSONAR_raw)
 #pragma config(Sensor, I2C_1,  fly1,           sensorNone)
-#pragma config(Motor,  port1,           DriveR1,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port1,           DriveR1,       tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(Motor,  port2,           FlyR1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           FlyR2,         tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           FlyL,          tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port6,           FlyTop,        tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port7,           DriveL,        tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port8,           Intake2,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port9,           Intake1,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port10,          DriveR2,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port4,           Intake1,       tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           Intake2,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port7,           FlyL,          tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port8,           DriveL,        tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port9,           FlyTop,        tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port10,          DriveR2,       tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(DatalogSeries, 0, "Timer", Timers, time100, T1, 1000)
 #pragma config(DatalogSeries, 1, "", Properties, averageBatteryLevel, , 1000)
 #pragma config(DatalogSeries, 2, "", Properties, immediateBatteryLevel, , 500)
@@ -24,8 +27,6 @@
 #pragma competitionControl(Competition)
 #pragma autonomousDuration(20)
 #pragma userControlDuration(120)
-
-#include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
 #define flyThreshold 1000
 #define ballThreshold 2500
@@ -40,6 +41,10 @@ float offset = 0;
 float battery = 0;
 float flywheelTicks = 0;
 int FlyTop1 = 0;
+int PIDOutput = 0;
+
+#include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "Tasks.c"	// file contains tasks
 
 //int flyWheelFilter[5];
 
@@ -65,6 +70,38 @@ const unsigned int TrueSpeed[128] =
 	88, 89, 89, 90, 90,127,127,127
 };
 
+typedef struct {
+		bool pos1;
+		bool pos2;
+		bool pos3;
+} ballStruct;
+
+ballStruct ballArray;
+
+//task ballControl {
+//	while(true)
+//	{
+//		ballArray.pos1 = SensorValue[ballSensor1] < ballThreshold ? true : false;
+//		ballArray.pos2 = SensorValue[ballSensor2] < ballThreshold ? true : false;
+//		ballArray.pos3 = SensorValue[ballSensor3] < ballThreshold ? true : false;
+//		switch(ballArray){
+//			case 0x000:
+//			case 0b100:
+//			case 0b110:
+//				motor[Intake1] = 127;
+//				break;
+//			case 0b001:
+//			case 0b011:
+//			case 0b010:
+//				motor[Intake1] = -127;
+//			case 0b111:
+//				motor[Intake1] = 0;
+//			default:
+//				break;
+//		}
+//	}
+//}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //                          Pre-Autonomous Functions
@@ -83,149 +120,6 @@ void pre_auton()
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
 }
-
-bool checkFlywheel()
-{
-	if(SensorValue[flyEncoder] > flyThreshold)
-		return true;
-	else
-		return false;
-}
-
-task flywheelTick()
-{
-	bool lastState = false;
-	while(true)
-	{
-		if(checkFlywheel() != lastState)
-		{
-			flywheelTicks++;
-			lastState = !lastState;
-		}
-	}
-}
-
-
-task RPMLoop()
-{
-	resetTimer(T1);
-	float oldTime = getTimer(T1,milliseconds);
-
-	//for(int n = 0; n < 5; n++){ //TAKING THE FLYWHEEL RPM AVERAGE
-	//	flyWheelFilter[n] = 0;
-	//}
-
-	while(true)
-	{
-		if(flywheelTicks == 5)
-		{
-			float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
-			//writeDebugStream("timeElapsed = %f\n", timeElapsed);
-			RPM = 60000/timeElapsed;
-			//writeDebugStream("%f, %i\n", RPM, targetRPM);
-			//datalogDataGroupStart();
-			//datalogAddValue( 0, RPM );
-			//datalogDataGroupEnd();
-			flywheelTicks = 0;
-			resetTimer(T1);
-			oldTime = getTimer(T1,milliseconds);
-		}
-	}
-}
-
-
-task RPMLoop2()
-{
-	while(true)
-	{
-		// Sample period
-		wait1Msec(25);
-		// Retrieve ticks over sample period
-		//currTick = SensorValue[enc1];
-
-		// Convert encoder ticks to RPM
-		RPM = -currTick*(2400/360);
-
-
-		// Debug
-		//	writeDebugStream("currTick is: %f\n", currTick);
-		datalogDataGroupStart();
-		datalogAddValue( 0, RPM );
-		datalogAddValue( 1, nAvgBatteryLevel);
-		datalogDataGroupEnd();
-		//writeDebugStream("RPM is: %f\n", RPM);
-
-		// Reset encoder
-		currTick = 0;
-		//SensorValue[enc1] = 0;
-	}
-}
-
-task flyPID()
-{
-	float kp = 0.05;
-	float ki = 0;
-	float kd = 0.15;
-	int error = 0;
-	int sigmaError = 0;
-	int deltaError = 0;
-	int previousError = 0;
-
-	while(true)
-	{
-		error = targetRPM - RPM;
-		if(error > integralThreshold)
-			sigmaError += error;
-		else
-			sigmaError = 0;
-		deltaError = error - previousError;
-		motorOutput += error * kp + sigmaError * ki + deltaError * kd;
-		if(motorOutput > 127)
-			motorOutput = 127;
-		if(motorOutput < 0)
-			motorOutput = 0;
-		previousError = error;
-		writeDebugStream("%i\n", motorOutput);
-	}
-}
-
-task pidControl()
-{
-	while(true)
-	{
-		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = motorOutput;
-		motor[FlyTop] =FlyTop1;
-	}
-}
-
-//task RPMLoop()
-//{
-//	while(true)
-//	{
-
-//		wait1Msec(25);
-//		currTick = SensorValue[enc1];
-//		RPM = currTick*(2400/360);
-//	//	writeDebugStream("currTick is: %f\n", currTick);
-//		writeDebugStream("RPM is: %f\n", RPM);
-//		offset = (RPM - targetRPM)*0.5;
-//		if((flywheelSpeed - offset) > 127)
-//		{
-//			flywheelSpeed = 127;
-//		}
-//		else if((flywheelSpeed - offset) < -127)
-//		{
-//			flywheelSpeed = -127;
-//		}
-//		else
-//		{
-//			flywheelSpeed = flywheelSpeed - offset;
-//		}
-//		motor[FL1]=motor[FL2]=motor[FR1]=motor[FR2]=TrueSpeed[flywheelSpeed];
-//		currTick = 0;
-//		SensorValue[enc1] = 0;
-//	}
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -361,7 +255,7 @@ task usercontrol()
 			motor[Intake1]=0;
 		}
 
-		if(vexRT[Btn6Dxmtr2] == 1)
+		if(vexRT[Btn6DXmtr2] == 1)
 		{
 			motor[Intake2]=-127;
 		}
