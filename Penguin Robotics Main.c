@@ -1,18 +1,21 @@
-#pragma config(Sensor, in1,    flyEncoder,     sensorLineFollower)
+#pragma config(Sensor, in1,    ballSensorTop,  sensorLineFollower)
 #pragma config(Sensor, in2,    ballSensorBottom, sensorLineFollower)
-#pragma config(Sensor, in3,    ballSensorTop,  sensorLineFollower)
-#pragma config(Sensor, dgtl1,  flywheelSwitch, sensorTouch)
-#pragma config(Sensor, dgtl12, intakepiston,   sensorDigitalOut)
+#pragma config(Sensor, in7,    gyro,           sensorGyro)
+#pragma config(Sensor, in8,    flyEncoder,     sensorLineFollower)
+#pragma config(Sensor, dgtl1,  intakepiston,   sensorDigitalOut)
+#pragma config(Sensor, dgtl7,  leftEncoder,    sensorQuadEncoder)
+#pragma config(Sensor, dgtl9,  rightEncoder,   sensorQuadEncoder)
+#pragma config(Sensor, dgtl11, ballSONAR,      sensorSONAR_raw)
 #pragma config(Sensor, I2C_1,  fly1,           sensorNone)
-#pragma config(Motor,  port1,           DriveR1,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port1,           DriveR1,       tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(Motor,  port2,           FlyR1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           FlyR2,         tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           FlyL,          tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port6,           FlyTop,        tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port7,           DriveL,        tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port8,           Intake2,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port9,           Intake1,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port10,          DriveR2,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port4,           Intake1,       tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           Intake2,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port7,           FlyL,          tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port8,           DriveL,        tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port9,           FlyTop,        tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port10,          DriveR2,       tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(DatalogSeries, 0, "Timer", Timers, time100, T1, 1000)
 #pragma config(DatalogSeries, 1, "", Properties, averageBatteryLevel, , 1000)
 #pragma config(DatalogSeries, 2, "", Properties, immediateBatteryLevel, , 500)
@@ -66,6 +69,38 @@ const unsigned int TrueSpeed[128] =
 	80, 81, 83, 84, 84, 86, 86, 87, 87, 88,
 	88, 89, 89, 90, 90,127,127,127
 };
+
+typedef struct {
+		bool pos1;
+		bool pos2;
+		bool pos3;
+} ballStruct;
+
+ballStruct ballArray;
+
+//task ballControl {
+//	while(true)
+//	{
+//		ballArray.pos1 = SensorValue[ballSensor1] < ballThreshold ? true : false;
+//		ballArray.pos2 = SensorValue[ballSensor2] < ballThreshold ? true : false;
+//		ballArray.pos3 = SensorValue[ballSensor3] < ballThreshold ? true : false;
+//		switch(ballArray){
+//			case 0x000:
+//			case 0b100:
+//			case 0b110:
+//				motor[Intake1] = 127;
+//				break;
+//			case 0b001:
+//			case 0b011:
+//			case 0b010:
+//				motor[Intake1] = -127;
+//			case 0b111:
+//				motor[Intake1] = 0;
+//			default:
+//				break;
+//		}
+//	}
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -220,7 +255,7 @@ task usercontrol()
 			motor[Intake1]=0;
 		}
 
-		if(vexRT[Btn6Dxmtr2] == 1)
+		if(vexRT[Btn6DXmtr2] == 1)
 		{
 			motor[Intake2]=-127;
 		}
