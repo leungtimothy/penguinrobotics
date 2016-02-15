@@ -106,9 +106,9 @@ task RPMLoop2()
 
 task flyPID()
 {
-	float kp = 0.0005;
-	float ki = 0.05;
-	float kd = 0.01;
+	float kp = 0.35;
+	float ki = 0.007;
+	float kd = 0.08;
 	int error = 0;
 	int sigmaError = 0;
 	int deltaError = 0;

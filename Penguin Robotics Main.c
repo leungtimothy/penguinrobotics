@@ -171,17 +171,17 @@ task usercontrol()
 		}
 		else if(vexRT[Btn8R] == 1)
 		{
-			targetRPM = 1600;
+			targetRPM = 1400;
 			FlyTop1 = 127;
 		}
 		else if(vexRT[Btn8L] == 1)
 		{
-			targetRPM = 2000;
+			targetRPM = 1600;
 			FlyTop1 = 127;
 		}
 		else if(vexRT[Btn8U] ==1)
 		{
-			targetRPM = 2500;
+			targetRPM = 1800;
 			FlyTop1 = 127;
 		}
 
