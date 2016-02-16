@@ -135,6 +135,38 @@ task flyPID()
 	}
 }
 
+bool signbit(int input)
+{
+	if(input < 0)
+		return true;
+	else
+		return false;
+}
+
+task tbhControl()
+{
+	float kGain = 0.01;
+	float TBHOutput = 0;
+	float kTBH = 0;
+	int error = 0;
+	int previousError = 0;
+	while(true)
+	{
+		error = targetRPM - RPM;
+		TBHOutput += kGain * error;
+		if(TBHOutput > 1)
+			TBHOutput = 1;
+		else if(TBHOutput < 0)
+			TBHOutput = 0;
+		if(signbit(error) != signbit(previousError))
+		{
+			TBHOutput = kTBH = (TBHOutput + kTBH) / 2;
+			previousError = error;
+		}
+		motorOutput = TBHOutput;
+	}
+}
+
 task pidControl()
 {
 	while(true)

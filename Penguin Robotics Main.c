@@ -48,11 +48,6 @@ int PIDOutput = 0;
 
 //int flyWheelFilter[5];
 
-
-
-
-
-
 const unsigned int TrueSpeed[128] =
 {
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -154,10 +149,12 @@ task usercontrol()
 {
 	// User control code here, inside the loop
 	//startTask(motorControl);
-	startTask(flyPID);
+	//startTask(flyPID);
 	startTask(pidControl);
+	startTask(tbhControl);
 	startTask(RPMLoop);
 	startTask(flywheelTick);
+
 
 	while (true)
 	{
