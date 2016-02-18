@@ -3,7 +3,7 @@
 #pragma config(Sensor, in7,    gyro,           sensorGyro)
 #pragma config(Sensor, in8,    flyEncoder,     sensorLineFollower)
 #pragma config(Sensor, dgtl1,  intakePiston,   sensorDigitalOut)
-#pragma config(Sensor, dgtl2,  flyHall,        sensorDigitalIn)
+#pragma config(Sensor, dgtl2,  flyHall,        sensorRotation)
 #pragma config(Sensor, dgtl7,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl9,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl11, ballSONAR,      sensorSONAR_raw)
@@ -28,7 +28,7 @@
 #define flyThreshold 1000
 #define ballThreshold 800	//**PLACEHOLDER**//
 #define nullThreshold 3000	//**PLACEHOLDER**//
-#define integralThreshold 0	//**PLACEHOLDER**//
+#define integralThreshold 100	//**PLACEHOLDER**//
 #define SONARThreshold 350	//**PLACEHOLDER**//
 
 int targetRPM = 0;
@@ -164,7 +164,7 @@ task usercontrol()
 			motor[Intake] = 0;
 
 		// Elevator Control
-		if (vexRT[Btn5U] && (!ballReady || (ballReady && RPMReady)))
+		if (vexRT[Btn5U]) //&& (!ballReady || (ballReady && RPMReady)))
 			motor[Elevator] = 127;
 		else if (vexRT[Btn5D])
 			motor[Elevator] = -127;
@@ -189,7 +189,7 @@ task usercontrol()
 		}
 		else if (vexRT[Btn8U])
 		{
-			targetRPM = 2200;
+			targetRPM = 2600;
 			topWheel = 127;
 		}
 	}

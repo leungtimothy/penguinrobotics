@@ -22,13 +22,11 @@ task fwTickCount()
 
 task rpmCalc()
 {
-	const int countNumOfSpin = 1; // wait until x rotation
-	const int ticksPerRotation = 24; //24 ticks/rev
 	while(true)
 	{
-		flywheelTicks = 0;
-		wait1Msec(1000);
-		RPM = flywheelTicks*2.4;
+		SensorValue[flyHall] = 0;
+		wait1Msec(100);
+		RPM = SensorValue[flyHall]*25;
 	}
 }
 
@@ -74,14 +72,14 @@ task tbhControl()
 task pidControl()
 {
 	// initialize constants & variables
-	float kp = 0.0000096;
-	float ki = 0.000016;
-	float kd = 0.0000004;
+	float kp = 0.0000075;
+	float ki = 0.0002;
+	float kd = 0.025;
 	float PIDOutput = 0;
 	int error = 0;
-	int sigmaError = 0;
 	int deltaError = 0;
 	int previousError = 0;
+	double sigmaError = 0;
 
 	while (true)
 	{
@@ -92,8 +90,8 @@ task pidControl()
 			sigmaError += error;
 		else
 			sigmaError = 0;
-		if (sigmaError > 50) // limit integration to 50
-			sigmaError = 50;
+		if (sigmaError > 50000) // limit integration to 50
+			sigmaError = 50000;
 		deltaError = error - previousError; 													// differentiate error
 		PIDOutput += error * kp + sigmaError * ki + deltaError * kd;	// calculate PID output
 
@@ -102,13 +100,17 @@ task pidControl()
 			PIDOutput = 127;
 		else if (PIDOutput < 0)
 			PIDOutput = 0;
+
+		// turn motors off if target RPM is 0
+		if (targetRPM == 0)
+			PIDOutput = 0;
+
 		motorOutput = PIDOutput; 	// send motor output
 		previousError = error;		// set previous error
 
-		/* USED FOR DEBUGGING
 		if (PIDOutput != 0)
-			writeDebugStream("Output: %i\t\tP: %i\t\tI: %i\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
-		*/
+			writeDebugStream("Output: %i\t\tP: %i\t\tI: %d\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
+
 	}
 }
 
