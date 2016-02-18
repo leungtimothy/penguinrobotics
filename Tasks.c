@@ -31,19 +31,31 @@ task pyramidControl()
 	}
 }
 
+//task RPMLoop()
+//{
+//	int rotationPiece = 2;
+//	resetTimer(T1);
+//	while(true)
+//	{
+//		if (flywheelTicks == rotationPiece*4)
+//		{
+//			RPM = rotationPiece*60.0/(time1[T1]/1000.0);
+//			resetTimer(T1);
+//			flywheelTicks = 0;
+//		}
+//	}
+//}
+
 task RPMLoop()
 {
 	int rotationPiece = 2;
 	resetTimer(T1);
 	while(true)
 	{
-		if (flywheelTicks == rotationPiece*4)
-		{
-			//RPM = 1000*4*60/ time1[T1];
-			RPM = rotationPiece*60.0/(time1[T1]/1000.0);
-			resetTimer(T1);
-			flywheelTicks = 0;
-		}
+		RPM = rotationPiece*60.0/(time1[T1]/1000.0);
+		resetTimer(T1);
+		flywheelTicks = 0;
+		wait1Msec(20);
 	}
 }
 
@@ -115,39 +127,6 @@ task flyPID()
 	}
 }
 
-//~~~~~~~~~~~~~~~~~~~~~~
-
-
-//task flyPID()
-//{
-//	float kp = 0.0005;
-//	float ki = 0.05;
-//	float kd = 0.01;
-//	int error = 0;
-//	int sigmaError = 0;
-//	int deltaError = 0;
-//	int previousError = 0;
-//	while(true)
-//	{
-//		error = targetRPM - RPM;
-//		if(error > integralThreshold)
-//			sigmaError += error;
-//		else
-//			sigmaError = 0;
-//		if(sigmaError > 50)
-//			sigmaError = 50;
-//		deltaError = error - previousError;
-//		PIDOutput += error * kp + sigmaError * ki + deltaError * kd;
-//		if(PIDOutput > 127)
-//			PIDOutput = 127;
-//		else if(PIDOutput < 0)
-//			PIDOutput = 0;
-//		motorOutput = PIDOutput;
-//		previousError = error;
-//		if (PIDOutput != 0)
-//			writeDebugStream("Output: %i\t\tP: %i\t\tI: %i\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
-//	}
-//}
 
 task pidControl()
 {

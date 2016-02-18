@@ -175,7 +175,7 @@ task usercontrol()
 				targetRPM = 2200;
 			btn7RPressed = true;
 		}
-		else if(vexRT[Btn7R] == 0) //&& btn7UPressed == true)
+		else if(vexRT[Btn7R] == 0)
 			btn7RPressed = false;
 
 		if(vexRT[Btn7L] == 1 && btn7LPressed == false)
@@ -187,7 +187,7 @@ task usercontrol()
 			}
 			btn7LPressed = true;
 		}
-		else if(vexRT[Btn7L] == 0) //&& btn7DPressed == true)
+		else if(vexRT[Btn7L] == 0)
 			btn7LPressed = false;
 
 		if(vexRT[Btn7D] ==1)
