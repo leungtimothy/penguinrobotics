@@ -1,7 +1,7 @@
 // RPM Calculation System
 bool checkFlywheel()
 {
-	if (SensorValue[flyEncoder] > flyThreshold)
+	if (SensorValue[flyHall] == 0)
 		return true;
 	else
 		return false;
@@ -22,27 +22,13 @@ task fwTickCount()
 
 task rpmCalc()
 {
-	resetTimer(T1);
-	float oldTime = getTimer(T1,milliseconds);
-	while (true)
+	const int countNumOfSpin = 1; // wait until x rotation
+	const int ticksPerRotation = 24; //24 ticks/rev
+	while(true)
 	{
-		if (flywheelTicks == 25) // 25 ticks per revolution
-		{
-			float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
-			RPM = 60000/timeElapsed;
-			/* USED FOR DEBUGGING
-			writeDebugStream("timeElapsed = %f\n", timeElapsed);
-			writeDebugStream("%f, %i\n", RPM, targetRPM);
-			datalogDataGroupStart();
-			datalogAddValue( 0, RPM );
-			datalogDataGroupEnd();
-			*/
-			flywheelTicks = 0;
-			resetTimer(T1);
-			oldTime = getTimer(T1,milliseconds);
-		}
-		else if	((getTimer(T1,milliseconds) - oldTime) > 2000)
-			RPM = 0;
+		flywheelTicks = 0;
+		wait1Msec(1000);
+		RPM = flywheelTicks*2.4;
 	}
 }
 

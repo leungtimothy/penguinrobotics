@@ -3,14 +3,15 @@
 #pragma config(Sensor, in7,    gyro,           sensorGyro)
 #pragma config(Sensor, in8,    flyEncoder,     sensorLineFollower)
 #pragma config(Sensor, dgtl1,  intakePiston,   sensorDigitalOut)
+#pragma config(Sensor, dgtl2,  flyHall,        sensorDigitalIn)
 #pragma config(Sensor, dgtl7,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl9,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl11, ballSONAR,      sensorSONAR_raw)
 #pragma config(Motor,  port1,           DriveR1,       tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(Motor,  port2,           FlyR1,         tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           FlyR2,         tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           Elevator,       tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           Intake,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port4,           Elevator,      tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           Intake,        tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           FlyL,          tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port8,           DriveL,        tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           FlyTop,        tmotorVex393_MC29, openLoop)
@@ -32,7 +33,7 @@
 
 int targetRPM = 0;
 int topWheel = 0;
-int RPM = 0;
+float RPM = 0;
 int flywheelTicks = 0;
 int motorOutput = 0;
 int ballCount = 0;
