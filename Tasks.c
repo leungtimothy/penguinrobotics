@@ -1,4 +1,25 @@
-// RPM Calculation System
+
+//bool checkFlywheel()
+//{
+//	if(SensorValue[flyEncoder] > flyThreshold)
+//		return true;
+//	else
+//		return false;
+//}
+
+//task flywheelTick()
+//{
+//	bool lastState = false;
+//	while(true)
+//	{
+//		if(checkFlywheel() != lastState)
+//		{
+//			flywheelTicks++;
+//			lastState = !lastState;
+//		}
+//	}
+//}
+
 bool checkFlywheel()
 {
 	if (SensorValue[flyHall] == 0)
@@ -7,7 +28,7 @@ bool checkFlywheel()
 		return false;
 }
 
-task fwTickCount()
+task flywheelTick()
 {
 	bool lastState = false;
 	while (true)
@@ -20,133 +41,147 @@ task fwTickCount()
 	}
 }
 
-task rpmCalc()
+
+
+
+
+
+
+#define ballDistance 400
+
+task pyramidControl()
 {
-	const int countNumOfSpin = 1; // wait until x rotation
-	const int ticksPerRotation = 24; //24 ticks/rev
 	while(true)
 	{
-		flywheelTicks = 0;
-		wait1Msec(1000);
-		RPM = flywheelTicks*2.4;
+		if((SensorValue[ballSONAR] < ballDistance) && (SensorValue[intakepiston] == 0))
+			SensorValue[intakepiston] = 1;
 	}
 }
 
-// TBH Flywheel Velocity Control
-bool signbit(int input)
-{
-	bool output = input < 0 ? true : false;
-	return output;
-}
+//task RPMLoop()
+//{
+//	int rotationPiece = 1;
+//	resetTimer(T1);
+//	while(true)
+//	{
+//		if (flywheelTicks == rotationPiece*24)
+//		{
+//			RPM = rotationPiece*60.0/(time1[T1]/1000.0);
+//			resetTimer(T1);
+//			flywheelTicks = 0;
+//		}
+//	}
+//}
 
-task tbhControl()
+task RPMLoop()
 {
-	// initialize constants & variables
-	float kGain = 0.00005;
-	float TBHOutput = 1;
-	float kZero = 0;
-	int error = 0;
-	int previousError = 0;
-
-	while (true)
+	const int RPMdelay = 100; // find the rpm every 100 millsec
+	while(true)
 	{
-		error = targetRPM - RPM;		// find error
-		TBHOutput += kGain * error;	// integrate error
+		//SensorValue[flyHall] = 0;
+		//wait1Msec(100);
+		//RPM = SensorValue[flyHall]*25;
+		SensorValue[flyHall] = 0;
+		wait1Msec(RPMdelay);
+		RPM = (SensorValue[flyHall]*60.0*1000)/(24.0*RPMdelay); // 60 = sec to min, 1000/RPMdelay = wait time conversion
 
-		// clamp TBH variable between 0 & 1
-		if (TBHOutput > 1)
-			TBHOutput = 1;
-		else if (TBHOutput < 0)
-			TBHOutput = 0;
-
-		// check for zero error crossing
-		if (signbit(error) != signbit(previousError))
-		{
-			TBHOutput = 0.5 * (TBHOutput + kZero);	// take back half
-			kZero = TBHOutput;											// reset zero
-		}
-		motorOutput = TBHOutput > 1 ? 127 : ((127 * TBHOutput) + 0.5); // send motor output
-		previousError = error; // set previous error
 	}
 }
 
-// PID Flywheel Velocity Control
-task pidControl()
+//~~~ FLYWHEEL~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Global variables
+int error = 0;
+int kpMotorValue = 0; //used for debugging
+int kiMotorValue = 0;
+int kdMotorValue = 0;
+
+task flyPID()
 {
-	// initialize constants & variables
-	float kp = 0.0000096;
-	float ki = 0.000016;
-	float kd = 0.0000004;
-	float PIDOutput = 0;
-	int error = 0;
+	int RPM_Drop = false;
+	int	errorData[2]; //averaging
+	int elementNum = 2;
+	for (int n = 0; n < elementNum; n++){ //initilizing
+		errorData[n] = 0;
+	}
+	int RPMCounter = 0;
+	int errorSum = 0;
+	float kp = 0.38;
+	float ki = 0.0085;
+	float kd = 0.15;
+	float k  = 0.044; //base rpm (dependant on target RPM) //0.05
 	int sigmaError = 0;
 	int deltaError = 0;
 	int previousError = 0;
 
-	while (true)
+	while(true)
 	{
-		error = targetRPM - RPM; // find error
-
-		// integrate error
-		if (error > integralThreshold)
-			sigmaError += error;
-		else
-			sigmaError = 0;
-		if (sigmaError > 50) // limit integration to 50
-			sigmaError = 50;
-		deltaError = error - previousError; 													// differentiate error
-		PIDOutput += error * kp + sigmaError * ki + deltaError * kd;	// calculate PID output
-
-		// clamp PID output between 0 & 127
-		if (PIDOutput > 127)
-			PIDOutput = 127;
-		else if (PIDOutput < 0)
-			PIDOutput = 0;
-		motorOutput = PIDOutput; 	// send motor output
-		previousError = error;		// set previous error
-
-		/* USED FOR DEBUGGING
-		if (PIDOutput != 0)
-			writeDebugStream("Output: %i\t\tP: %i\t\tI: %i\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
-		*/
-	}
-}
-
-// Launcher Motor Controller
-task motorControl()
-{
-	while (true)
-	{
-		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = motorOutput;	// set bottom wheel speed
-		motor[FlyTop] = topWheel;																	// set top wheel speed
-	}
-}
-
-// Ball Inhibitor
-task ballInhibitor()
-{
-	while (true)
-	{
-		// check if ball is in place for shot
-		if (SensorValue[ballSensorTop] < ballThreshold)
-			ballReady = true;
-		else
-			ballReady = false;
-		// check if RPM is suitable
-		if ((targetRPM > (RPM - 50)) && (targetRPM < (RPM + 50)) && (targetRPM != 0))
-			RPMReady = true;
-		else
-			RPMReady = false;
-	}
-}
-
-// Ball Counter
-task ballCounter()
-{
-	while (true){
-		if (SensorValue[ballSensorTop] < ballThreshold){
-			ballCount++;
-			while (SensorValue[ballSensorTop] < nullThreshold){};
+		if (RPMCounter>elementNum-1)
+		{
+			RPMCounter = 0;
 		}
+		errorData[RPMCounter] = targetRPM - RPM;
+		errorSum = 0;
+		for(int k = 0; k < elementNum; k++){ //taking the sum of the past RPM data point
+			errorSum += errorData[k];
+		}
+		error = errorSum/elementNum; //taking the average RPM
+
+		if(abs(deltaError) > 40)
+		{
+			RPM_Drop = true;
+			resetTimer(T2);
+		}
+		else if (time1[T2] > 600)
+			RPM_Drop = false;
+
+		if(motorOutput < 110 && motorOutput > 20 && abs(error) < 250 && RPM_Drop == false) //intergration restrictions
+			sigmaError += error;
+
+		deltaError = error - previousError;
+
+		PIDOutput = error * kp + sigmaError * ki + deltaError * kd + targetRPM*k;
+		//debug~~~~~~~~~~~~~~~~~~~~~~~~~
+		kpMotorValue = error * kp;
+		kiMotorValue = sigmaError * ki;
+		kdMotorValue = deltaError * kd;
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		if(PIDOutput > 127) //caping motor value
+			PIDOutput = 127;
+		else if(PIDOutput < 0)
+			PIDOutput = 0;
+
+		motorOutput = (TrueSpeed[PIDOutput]); //true speed + send value to motor
+		previousError = error;
+		wait1Msec(10);
+	}
+}
+
+
+task pidControl()
+{
+	while(true)
+	{
+		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = motorOutput;
+		motor[FlyTop] = FlyTop1;
+	}
+}
+
+task RPMGRAPH()
+{
+	clearTimer(T4);
+	datalogClear();
+	while(true)
+	{
+		datalogDataGroupStart();
+		datalogAddValue( 0, RPM );
+		datalogAddValue( 1, targetRPM );
+		datalogAddValue( 2, motorOutput );
+		datalogAddValue( 3, error);
+		datalogAddValue( 4, SensorValue[flyEncoder] );
+		datalogAddValue( 5, kpMotorValue);
+		datalogAddValue( 6, kiMotorValue);
+		datalogAddValue( 7, kdMotorValue);
+		datalogDataGroupEnd();
+		wait1Msec(10);
 	}
 }
