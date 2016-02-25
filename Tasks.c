@@ -1,32 +1,11 @@
 // RPM Calculation System
-bool checkFlywheel()
-{
-	if (SensorValue[flyHall] == 0)
-		return true;
-	else
-		return false;
-}
-
-task fwTickCount()
-{
-	bool lastState = false;
-	while (true)
-	{
-		if (checkFlywheel() != lastState)
-		{
-			flywheelTicks++;
-			lastState = !lastState;
-		}
-	}
-}
-
 task rpmCalc()
 {
 	while(true)
 	{
 		SensorValue[flyHall] = 0;
 		wait1Msec(100);
-		RPM = SensorValue[flyHall]*25;
+		RPM = SensorValue[flyHall] * 25;
 	}
 }
 
@@ -63,7 +42,7 @@ task tbhControl()
 			TBHOutput = 0.5 * (TBHOutput + kZero);	// take back half
 			kZero = TBHOutput;											// reset zero
 		}
-		motorOutput = TBHOutput > 1 ? 127 : ((127 * TBHOutput) + 0.5); // send motor output
+		fwOutput = TBHOutput > 1 ? 127 : ((127 * TBHOutput) + 0.5); // send motor output
 		previousError = error; // set previous error
 	}
 }
@@ -72,28 +51,29 @@ task tbhControl()
 task pidControl()
 {
 	// initialize constants & variables
-	float kp = 0.0000075;
-	float ki = 0.0002;
-	float kd = 0.025;
+	float kp = 0.0002;
+	float ki = 0;
+	float kd = 0.15;
 	float PIDOutput = 0;
 	int error = 0;
 	int deltaError = 0;
 	int previousError = 0;
-	double sigmaError = 0;
+	float sigmaError = 0;
 
 	while (true)
 	{
 		error = targetRPM - RPM; // find error
 
-		// integrate error
-		if (error > integralThreshold)
-			sigmaError += error;
-		else
-			sigmaError = 0;
-		if (sigmaError > 50000) // limit integration to 50
-			sigmaError = 50000;
-		deltaError = error - previousError; 													// differentiate error
-		PIDOutput += error * kp + sigmaError * ki + deltaError * kd;	// calculate PID output
+		//// integrate error
+		//if (abs(error) > integralThreshold)
+		//	sigmaError += error;
+		//else
+		//	sigmaError = 0;
+		//if (sigmaError > 5000000) // limit integration to 50
+		//	sigmaError = 5000000;
+
+		deltaError = error - previousError; 																// differentiate error
+		PIDOutput += error * kp /* + sigmaError * ki */ + deltaError * kd;	// calculate PID output
 
 		// clamp PID output between 0 & 127
 		if (PIDOutput > 127)
@@ -105,21 +85,20 @@ task pidControl()
 		if (targetRPM == 0)
 			PIDOutput = 0;
 
-		motorOutput = PIDOutput; 	// send motor output
+		fwOutput = PIDOutput; 	// send motor output
 		previousError = error;		// set previous error
 
 		if (PIDOutput != 0)
-			writeDebugStream("Output: %i\t\tP: %i\t\tI: %d\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
-
+			writeDebugStream("Output: %i\t\tP: %i\t\tI: %f\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
 	}
 }
 
 // Launcher Motor Controller
-task motorControl()
+task fwControl()
 {
 	while (true)
 	{
-		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = motorOutput;	// set bottom wheel speed
+		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = fwOutput;	// set bottom wheel speed
 		motor[FlyTop] = topWheel;																	// set top wheel speed
 	}
 }

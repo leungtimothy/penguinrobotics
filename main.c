@@ -31,11 +31,10 @@
 #define integralThreshold 100	//**PLACEHOLDER**//
 #define SONARThreshold 350	//**PLACEHOLDER**//
 
-int targetRPM = 0;
-int topWheel = 0;
+float targetRPM = 0;
 float RPM = 0;
-int flywheelTicks = 0;
-int motorOutput = 0;
+int topWheel = 0;
+int fwOutput = 0;
 int ballCount = 0;
 
 bool ballReady = false;
@@ -111,11 +110,10 @@ task usercontrol()
 {
 	bool boolBtn7L = false;
 	bool boolBtn7R = false;
-	startTask(fwTickCount);
 	startTask(rpmCalc);
 	startTask(pidControl);
 	//startTask(tbhControl);
-	startTask(motorControl);
+	startTask(fwControl);
 	startTask(ballInhibitor);
 	while (true)
 	{
@@ -134,19 +132,19 @@ task usercontrol()
 			motor[DriveR1] = motor[DriveR2] = 0;
 
 		// RPM Increment
-		if (vexRT[Btn7L] && !boolBtn7L)
+		if (vexRT[Btn7L] && boolBtn7L == false)
 		{
-			targetRPM = targetRPM > 0 ? targetRPM - 200 : 0;
+			targetRPM = targetRPM > 500 ? targetRPM - 100 : 500;
 			boolBtn7L = true;
 		}
-		else
+		else if (vexRT[Btn7L] == 0)
 			boolBtn7L = false;
-		if (vexRT[Btn7R] && !boolBtn7R)
+		if (vexRT[Btn7R] && boolBtn7R == false)
 		{
-			targetRPM = targetRPM < 2200 ? targetRPM + 200 : 2200;
+			targetRPM = targetRPM < 2600 ? targetRPM + 100 : 2600;
 			boolBtn7R = true;
 		}
-		else
+		else if (vexRT[Btn7R] == 0)
 			boolBtn7R = false;
 
 		// Intake Piston Control
@@ -164,7 +162,7 @@ task usercontrol()
 			motor[Intake] = 0;
 
 		// Elevator Control
-		if (vexRT[Btn5U]) //&& (!ballReady || (ballReady && RPMReady)))
+		if (vexRT[Btn5U] && (!ballReady || (ballReady && RPMReady)))
 			motor[Elevator] = 127;
 		else if (vexRT[Btn5D])
 			motor[Elevator] = -127;
@@ -179,17 +177,17 @@ task usercontrol()
 		}
 		else if (vexRT[Btn8R])
 		{
-			targetRPM = 1400;
+			targetRPM = 1800;
 			topWheel = 127;
 		}
 		else if (vexRT[Btn8L])
 		{
-			targetRPM = 1800;
+			targetRPM = 2200;
 			topWheel = 127;
 		}
 		else if (vexRT[Btn8U])
 		{
-			targetRPM = 2600;
+			targetRPM = 2500;
 			topWheel = 127;
 		}
 	}
