@@ -51,18 +51,29 @@ task tbhControl()
 task pidControl()
 {
 	// initialize constants & variables
-	float kp = 0.00018;
+	float kp = 0.0002;
+	float ki = 0;
 	float kd = 0.15;
 	float PIDOutput = 0;
 	int error = 0;
 	int deltaError = 0;
 	int previousError = 0;
+	float sigmaError = 0;
 
 	while (true)
 	{
-		error = targetRPM - RPM; 										// find error
-		deltaError = error - previousError; 				// differentiate error
-		PIDOutput += error * kp + deltaError * kd;	// calculate PID output
+		error = targetRPM - RPM; // find error
+
+		//// integrate error
+		//if (abs(error) > integralThreshold)
+		//	sigmaError += error;
+		//else
+		//	sigmaError = 0;
+		//if (sigmaError > 5000000) // limit integration to 50
+		//	sigmaError = 5000000;
+
+		deltaError = error - previousError; 																// differentiate error
+		PIDOutput += error * kp /* + sigmaError * ki */ + deltaError * kd;	// calculate PID output
 
 		// clamp PID output between 0 & 127
 		if (PIDOutput > 127)
@@ -78,7 +89,7 @@ task pidControl()
 		previousError = error;		// set previous error
 
 		if (PIDOutput != 0)
-			writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\n", PIDOutput, error, deltaError);
+			writeDebugStream("Output: %i\t\tP: %i\t\tI: %f\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
 	}
 }
 
