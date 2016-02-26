@@ -141,7 +141,7 @@ task usercontrol()
 			boolBtn7L = false;
 		if (vexRT[Btn7R] && boolBtn7R == false)
 		{
-			targetRPM = targetRPM < 2600 ? targetRPM + 100 : 2600;
+			targetRPM = targetRPM < 2500 ? targetRPM + 100 : 2500;
 			boolBtn7R = true;
 		}
 		else if (vexRT[Btn7R] == 0)
@@ -187,7 +187,7 @@ task usercontrol()
 		}
 		else if (vexRT[Btn8U])
 		{
-			targetRPM = 2500;
+			targetRPM = 2400;
 			topWheel = 127;
 		}
 	}

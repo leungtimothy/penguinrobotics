@@ -1,12 +1,26 @@
 // RPM Calculation System
 task rpmCalc()
 {
+	SensorValue[flyHall] = 0;
+	resetTimer(T1);
+	float oldTime = getTimer(T1,milliseconds);
 	while(true)
 	{
-		SensorValue[flyHall] = 0;
-		wait1Msec(100);
-		RPM = SensorValue[flyHall] * 25;
+		if(SensorValue[flyHall] >= 24)
+		{
+			float timeElapsed = (getTimer(T1,milliseconds) - oldTime);
+			RPM = 60000/timeElapsed;
+			SensorValue[flyHall] = 0;
+			resetTimer(T1);
+			oldTime = getTimer(T1,milliseconds);
+		}
 	}
+	 //while(true)
+	 //{
+		// SensorValue[flyHall] = 0;
+		// wait1Msec(100);
+		// RPM = SensorValue[flyHall] * 25;
+	 //}
 }
 
 // TBH Flywheel Velocity Control
@@ -51,12 +65,12 @@ task tbhControl()
 task pidControl()
 {
 	// initialize constants & variables
-	float kp = 0.00018;
-	float kd = 0.15;
+	float kp = 0.0000625;
+	float kd = 0.1;
 	float PIDOutput = 0;
 	int error = 0;
 	int deltaError = 0;
-	int previousError = 0;
+	int previousError = 3000; // avoid first time cap
 
 	while (true)
 	{
@@ -72,7 +86,10 @@ task pidControl()
 
 		// turn motors off if target RPM is 0
 		if (targetRPM == 0)
+		{
 			PIDOutput = 0;
+			previousError = 3000;
+		}
 
 		fwOutput = PIDOutput; 	// send motor output
 		previousError = error;		// set previous error
