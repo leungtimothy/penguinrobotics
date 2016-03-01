@@ -24,6 +24,7 @@ task pidControl()
 		RPM = getRPM();															// find instanteous RPM
 		error = targetRPM - RPM; 										// find error
 		deltaError = error - previousError; 				// differentiate error
+		previousError = error;											// set previous error
 		PIDOutput += error * kp + deltaError * kd;	// calculate PID output
 
 		// clamp PID output between 0 & 127
@@ -31,8 +32,6 @@ task pidControl()
 			PIDOutput = 127;
 		else if (PIDOutput < 0)
 			PIDOutput = 0;
-
-		previousError = error;	// set previous error
 
 		// turn motors off if target RPM is 0 & reset previous error to prevent output capping
 		if (targetRPM == 0)
@@ -43,7 +42,6 @@ task pidControl()
 
 		fwOutput = PIDOutput; // send motor output
 
-
 		//if (PIDOutput != 0)
 		//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
 	}
@@ -53,10 +51,7 @@ task pidControl()
 task fwControl()
 {
 	while (true)
-	{
-		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = fwOutput;	// set bottom wheel speed
-		motor[FlyTop] = topWheel;																	// set top wheel speed
-	}
+		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = fwOutput;	// set flywheel speed
 }
 
 // Ball Inhibitor
@@ -70,7 +65,7 @@ task ballInhibitor()
 		else
 			ballReady = false;
 		// check if RPM is suitable
-		if ((targetRPM > (RPM - 50)) && (targetRPM < (RPM + 50)) && (targetRPM != 0))
+		if ((targetRPM > (RPM - 50)) && (targetRPM != 0))
 			RPMReady = true;
 		else
 			RPMReady = false;
