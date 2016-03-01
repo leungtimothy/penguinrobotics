@@ -1,50 +1,11 @@
-// RPM Calculation System
-task rpmCalc()
+// Function to return RPM value after 100ms poll time
+int getRPM()
 {
-	while(true)
-	{
-		SensorValue[flyHall] = 0;
-		wait1Msec(100);
-		RPM = SensorValue[flyHall] * 25;
-	}
-}
+	SensorValue[flyHall] = 0;
+	wait1Msec(rpmDelay);
 
-// TBH Flywheel Velocity Control
-bool signbit(int input)
-{
-	bool output = input < 0 ? true : false;
-	return output;
-}
-
-task tbhControl()
-{
-	// initialize constants & variables
-	float kGain = 0.00005;
-	float TBHOutput = 1;
-	float kZero = 0;
-	int error = 0;
-	int previousError = 0;
-
-	while (true)
-	{
-		error = targetRPM - RPM;		// find error
-		TBHOutput += kGain * error;	// integrate error
-
-		// clamp TBH variable between 0 & 1
-		if (TBHOutput > 1)
-			TBHOutput = 1;
-		else if (TBHOutput < 0)
-			TBHOutput = 0;
-
-		// check for zero error crossing
-		if (signbit(error) != signbit(previousError))
-		{
-			TBHOutput = 0.5 * (TBHOutput + kZero);	// take back half
-			kZero = TBHOutput;											// reset zero
-		}
-		fwOutput = TBHOutput > 1 ? 127 : ((127 * TBHOutput) + 0.5); // send motor output
-		previousError = error; // set previous error
-	}
+	// conversion: 1 revolution per 24 ticks, 1000 milliseconds per 1 seconds, 60 seconds per 1 minute
+	return (SensorValue[flyHall] / rpmDelay) * (1 / 24) * (1000 / 1) * (60 / 1);
 }
 
 // PID Flywheel Velocity Control
@@ -52,28 +13,18 @@ task pidControl()
 {
 	// initialize constants & variables
 	float kp = 0.0002;
-	float ki = 0;
 	float kd = 0.15;
 	float PIDOutput = 0;
 	int error = 0;
 	int deltaError = 0;
-	int previousError = 0;
-	float sigmaError = 0;
+	int previousError = 3000; // prevent output capping during first loop
 
 	while (true)
 	{
-		error = targetRPM - RPM; // find error
-
-		//// integrate error
-		//if (abs(error) > integralThreshold)
-		//	sigmaError += error;
-		//else
-		//	sigmaError = 0;
-		//if (sigmaError > 5000000) // limit integration to 50
-		//	sigmaError = 5000000;
-
-		deltaError = error - previousError; 																// differentiate error
-		PIDOutput += error * kp /* + sigmaError * ki */ + deltaError * kd;	// calculate PID output
+		RPM = getRPM();															// find instanteous RPM
+		error = targetRPM - RPM; 										// find error
+		deltaError = error - previousError; 				// differentiate error
+		PIDOutput += error * kp + deltaError * kd;	// calculate PID output
 
 		// clamp PID output between 0 & 127
 		if (PIDOutput > 127)
@@ -81,15 +32,20 @@ task pidControl()
 		else if (PIDOutput < 0)
 			PIDOutput = 0;
 
-		// turn motors off if target RPM is 0
+		previousError = error;	// set previous error
+
+		// turn motors off if target RPM is 0 & reset previous error to prevent output capping
 		if (targetRPM == 0)
+		{
 			PIDOutput = 0;
+			previousError = 3000;
+		}
 
-		fwOutput = PIDOutput; 	// send motor output
-		previousError = error;		// set previous error
+		fwOutput = PIDOutput; // send motor output
 
-		if (PIDOutput != 0)
-			writeDebugStream("Output: %i\t\tP: %i\t\tI: %f\t\tD: %i\n", PIDOutput, error, sigmaError, deltaError);
+
+		//if (PIDOutput != 0)
+		//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
 	}
 }
 

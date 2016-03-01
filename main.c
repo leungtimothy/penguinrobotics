@@ -30,9 +30,10 @@
 #define nullThreshold 3000	//**PLACEHOLDER**//
 #define integralThreshold 100	//**PLACEHOLDER**//
 #define SONARThreshold 350	//**PLACEHOLDER**//
+#define rpmDelay 100
 
-float targetRPM = 0;
-float RPM = 0;
+int targetRPM = 0;
+int RPM = 0;
 int topWheel = 0;
 int fwOutput = 0;
 int ballCount = 0;
@@ -110,9 +111,7 @@ task usercontrol()
 {
 	bool boolBtn7L = false;
 	bool boolBtn7R = false;
-	startTask(rpmCalc);
 	startTask(pidControl);
-	//startTask(tbhControl);
 	startTask(fwControl);
 	startTask(ballInhibitor);
 	while (true)
@@ -171,24 +170,12 @@ task usercontrol()
 
 		// Flywheel Control
 		if (vexRT[Btn8D])
-		{
 			targetRPM = 0;
-			topWheel = 0;
-		}
 		else if (vexRT[Btn8R])
-		{
-			targetRPM = 1800;
-			topWheel = 127;
-		}
-		else if (vexRT[Btn8L])
-		{
 			targetRPM = 2200;
-			topWheel = 127;
-		}
-		else if (vexRT[Btn8U])
-		{
+		else if (vexRT[Btn8L])
 			targetRPM = 2500;
-			topWheel = 127;
-		}
+		else if (vexRT[Btn8U])
+			targetRPM = 2700;
 	}
 }
