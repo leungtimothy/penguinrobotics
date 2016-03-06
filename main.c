@@ -37,6 +37,7 @@ int ballCount = 0;
 
 bool ballReady = false;
 bool RPMReady = false;
+bool newRPM = false;
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 #include "tasks.c"
@@ -96,6 +97,7 @@ task usercontrol()
 {
 	bool boolBtn7L = false;
 	bool boolBtn7R = false;
+	startTask(rpmCalc);
 	startTask(pidControl);
 	startTask(fwControl);
 	startTask(ballInhibitor);
@@ -118,14 +120,14 @@ task usercontrol()
 		// RPM Increment
 		if (vexRT[Btn7L] && boolBtn7L == false)
 		{
-			targetRPM = targetRPM > 500 ? targetRPM - 100 : 500;
+			targetRPM = targetRPM > 0 ? targetRPM - 100 : 0;
 			boolBtn7L = true;
 		}
 		else if (vexRT[Btn7L] == 0)
 			boolBtn7L = false;
 		if (vexRT[Btn7R] && boolBtn7R == false)
 		{
-			targetRPM = targetRPM < 2600 ? targetRPM + 100 : 2600;
+			targetRPM = targetRPM < 2700 ? targetRPM + 100 : 2700;
 			boolBtn7R = true;
 		}
 		else if (vexRT[Btn7R] == 0)

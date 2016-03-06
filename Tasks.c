@@ -1,11 +1,16 @@
-// Function to return RPM value after 100ms poll time
-int getRPM()
+// RPM Task
+task rpmCalc()
 {
-	SensorValue[flyHall] = 0;
-	wait1Msec(rpmDelay);
+	while(true)
+	{
+		SensorValue[flyHall] = 0;
+		wait1Msec(rpmDelay);
 
-	// conversion: 1 revolution per 24 ticks, 1000 milliseconds per 1 seconds, 60 seconds per 1 minute
-	return (SensorValue[flyHall] / rpmDelay) * (1 / 24) * (1000 / 1) * (60 / 1);
+		// conversion: 1 revolution per 24 ticks, 1000 milliseconds per 1 seconds, 60 seconds per 1 minute
+		RPM = (SensorValue[flyHall] / rpmDelay) * (1 / 24) * (1000 / 1) * (60 / 1);
+
+		newRPM = true;
+	}
 }
 
 // PID Flywheel Velocity Control
@@ -21,29 +26,33 @@ task pidControl()
 
 	while (true)
 	{
-		RPM = getRPM();															// find instanteous RPM
-		error = targetRPM - RPM; 										// find error
-		deltaError = error - previousError; 				// differentiate error
-		previousError = error;											// set previous error
-		PIDOutput += error * kp + deltaError * kd;	// calculate PID output
-
-		// clamp PID output between 0 & 127
-		if (PIDOutput > 127)
-			PIDOutput = 127;
-		else if (PIDOutput < 0)
-			PIDOutput = 0;
-
-		// turn motors off if target RPM is 0 & reset previous error to prevent output capping
-		if (targetRPM == 0)
+		if (newRPM)
 		{
-			PIDOutput = 0;
-			previousError = 3000;
+			error = targetRPM - RPM; 										// find error
+			deltaError = error - previousError; 				// differentiate error
+			previousError = error;											// set previous error
+			PIDOutput += error * kp + deltaError * kd;	// calculate PID output
+
+			// clamp PID output between 0 & 127
+			if (PIDOutput > 127)
+				PIDOutput = 127;
+			else if (PIDOutput < 0)
+				PIDOutput = 0;
+
+			// turn motors off if target RPM is 0 & reset previous error to prevent output capping
+			if (targetRPM == 0)
+			{
+				PIDOutput = 0;
+				previousError = 3000;
+			}
+
+			fwOutput = PIDOutput; // send motor output
+
+			newRPM = false;
+
+			//if (PIDOutput != 0)
+			//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
 		}
-
-		fwOutput = PIDOutput; // send motor output
-
-		//if (PIDOutput != 0)
-		//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
 	}
 }
 
