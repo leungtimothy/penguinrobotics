@@ -17,7 +17,19 @@
 #pragma autonomousDuration(20)
 #pragma userControlDuration(120)
 
+#define rpmDelay 100
+
+int targetRPM = 0;
+int RPM = 0;
+int fwOutput = 0;
+int ballCount = 0;
+
+bool ballReady = false;
+bool RPMReady = false;
+bool newRPM = false;
+
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "tasks.c"
 
 const unsigned int TrueSpeed[128] =
 {
@@ -84,8 +96,6 @@ task autonomous()
 
 task usercontrol()
 {
-	// User control code here, inside the loop
-
 	while (true)
 	{
 	  // Tank Drive w/ deadzone of 20
@@ -119,11 +129,17 @@ task usercontrol()
 			motor[Elevator] = 0;
 
 		// Tower Motor Control
-		if (vexRT[Btn7R])
+		if (vexRT[Btn8L]) // control flywheel
+			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 60;
+		else if (vexRT[Btn8R])
+			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 75;
+		else if (vexRT[Btn8U])
 			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 127;
-		else if (vexRT[Btn7L])
+		else if (vexRT[Btn7L]) // control puncher
 			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = -127;
-		else if (vexRT[Btn7D])
+		else if (vexRT[Btn8D] || vexRT[Btn7L] == false)
+		{
 			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 0;
+		}
 	}
 }

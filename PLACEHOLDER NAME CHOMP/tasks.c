@@ -9,7 +9,7 @@ task rpmCalc()
 		// conversion: 1 revolution per 24 ticks, 1000 milliseconds per 1 seconds, 60 seconds per 1 minute
 		RPM = (SensorValue[flyHall] / rpmDelay) * (1 / 24) * (1000 / 1) * (60 / 1);
 
-		newRPM = true;
+		isNewRPM = true;
 	}
 }
 
@@ -26,7 +26,7 @@ task pidControl()
 
 	while (true)
 	{
-		if (newRPM)
+		if (isNewRPM)
 		{
 			error = targetRPM - RPM; 										// find error
 			deltaError = error - previousError; 				// differentiate error
@@ -48,7 +48,7 @@ task pidControl()
 
 			fwOutput = PIDOutput; // send motor output
 
-			newRPM = false;
+			isNewRPM = false;
 
 			//if (PIDOutput != 0)
 			//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
@@ -57,10 +57,12 @@ task pidControl()
 }
 
 // Launcher Motor Controller
-task fwControl()
+task motorControl()
 {
 	while (true)
 		motor[FlyL] = motor[FlyR1] = motor[FlyR2] = fwOutput;	// set flywheel speed
+		motor[DriveL] = leftOutput;
+		motor[DriveR1] = motor[DriveR2] = rightOutput;
 }
 
 // Ball Inhibitor
@@ -69,15 +71,10 @@ task ballInhibitor()
 	while (true)
 	{
 		// check if ball is in place for shot
-		if (SensorValue[ballSensorTop] < ballThreshold)
-			ballReady = true;
-		else
-			ballReady = false;
+		isBallReady = SensorValue[ballSensorTop] < ballThreshold ? true : false;
+
 		// check if RPM is suitable
-		if ((targetRPM > (RPM - 50)) && (targetRPM != 0))
-			RPMReady = true;
-		else
-			RPMReady = false;
+		isRPMReady = (targetRPM > (RPM - 50) && targetRPM != 0) ? true : false;
 	}
 }
 

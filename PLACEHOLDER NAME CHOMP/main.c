@@ -33,14 +33,17 @@
 int targetRPM = 0;
 int RPM = 0;
 int fwOutput = 0;
+int leftOutput = 0;
+int rightOutput = 0;
 int ballCount = 0;
 
-bool ballReady = false;
-bool RPMReady = false;
-bool newRPM = false;
+bool isBallReady = false;
+bool isRPMReady = false;
+bool isNewRPM = false;
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 #include "tasks.c"
+#include "autofunctions.c"
 
 const unsigned int TrueSpeed[128] =
 {
@@ -91,16 +94,20 @@ task autonomous()
 {
 	startTask(ballCounter);
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
+	driveAD("forward", 100);
 }
 
 task usercontrol()
 {
-	bool boolBtn7L = false;
-	bool boolBtn7R = false;
+	//Task Startup
 	startTask(rpmCalc);
 	startTask(pidControl);
-	startTask(fwControl);
+	startTask(motorControl);
 	startTask(ballInhibitor);
+
+	// Booleans for toggle check
+	bool isBtn7LPressed = false;
+	bool isBtn7RPressed = false;
 	while (true)
 	{
 		// Tank Drive w/ deadzone of 20
@@ -118,20 +125,20 @@ task usercontrol()
 			motor[DriveR1] = motor[DriveR2] = 0;
 
 		// RPM Increment
-		if (vexRT[Btn7L] && boolBtn7L == false)
+		if (vexRT[Btn7L] && isBtn7LPressed == false)
 		{
 			targetRPM = targetRPM > 0 ? targetRPM - 100 : 0;
-			boolBtn7L = true;
+			isBtn7LPressed = true;
 		}
 		else if (vexRT[Btn7L] == 0)
-			boolBtn7L = false;
-		if (vexRT[Btn7R] && boolBtn7R == false)
+			isBtn7LPressed = false;
+		if (vexRT[Btn7R] && isBtn7RPressed == false)
 		{
 			targetRPM = targetRPM < 2700 ? targetRPM + 100 : 2700;
-			boolBtn7R = true;
+			isBtn7RPressed = true;
 		}
 		else if (vexRT[Btn7R] == 0)
-			boolBtn7R = false;
+			isBtn7RPressed = false;
 
 		// Intake Piston Control
 		if (vexRT[Btn7U])
@@ -148,7 +155,7 @@ task usercontrol()
 			motor[Intake] = 0;
 
 		// Elevator Control
-		if (vexRT[Btn5U] && (!ballReady || (ballReady && RPMReady)))
+		if (vexRT[Btn5U] && (isBallReady == false || (isBallReady && isRPMReady)))
 			motor[Elevator] = 127;
 		else if (vexRT[Btn5D])
 			motor[Elevator] = -127;
