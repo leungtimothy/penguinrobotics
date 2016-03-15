@@ -13,13 +13,13 @@ task rpmCalc()
 	}
 }
 
-// PID Flywheel Velocity Control
-task pidControl()
+// PD Flywheel Velocity Control
+task pdControl()
 {
 	// initialize constants & variables
 	float kp = 0.0002;
 	float kd = 0.15;
-	float PIDOutput = 0;
+	float PDOutput = 0;
 	int error = 0;
 	int deltaError = 0;
 	int previousError = 3000; // prevent output capping during first loop
@@ -31,23 +31,56 @@ task pidControl()
 			error = targetRPM - RPM; 										// find error
 			deltaError = error - previousError; 				// differentiate error
 			previousError = error;											// set previous error
-			PIDOutput += error * kp + deltaError * kd;	// calculate PID output
+			PDOutput += error * kp + deltaError * kd;	// calculate PD output
 
 			// clamp PID output between 0 & 127
-			if (PIDOutput > 127)
-				PIDOutput = 127;
-			else if (PIDOutput < 0)
-				PIDOutput = 0;
+			PDOutput = PDOutput > 127 ? 127 : PDOutput < 0 ? 0 : PDOutput;
 
 			// turn motors off if target RPM is 0 & reset previous error to prevent output capping
 			if (targetRPM == 0)
 			{
-				PIDOutput = 0;
+				PDOutput = 0;
 				previousError = 3000;
 			}
 
-			fwOutput = PIDOutput; // send motor output
+			fwOutput = PDOutput; // send motor output
 
+			isNewRPM = false;
+
+			//if (PDOutput != 0)
+			//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PDOutput, error, deltaError);
+		}
+	}
+}
+
+// PI Flywheel Velocity Control, P term for ends, I term for explosive middle
+task piControl()
+{
+	// initialize constants & variables
+	float kp = 0.0002;
+	float ki = 0.005;
+	float PIOutput = 0;
+	int error = 0;
+	int sigmaError = 0;
+
+	while (true)
+	{
+		if (isNewRPM)
+		{
+			error = targetRPM - RPM; 										// find error
+
+			// integrate significant errors
+			if (error > integralThreshold)
+				sigmaError += error;
+			else
+				sigmaError = 0;
+
+			PIOutput += error * kp + sigmaError * ki;		// calculate PI output
+
+			// clamp PID output between 0 & 127, send to motors
+			fwOutput = PIOutput > 127 ? 127 : (PIOutput < 0 || targetRPM == 0) ? 0 : PIOutput;
+
+			// reset boolean to use new RPMs only
 			isNewRPM = false;
 
 			//if (PIDOutput != 0)
@@ -71,10 +104,10 @@ task ballInhibitor()
 	while (true)
 	{
 		// check if ball is in place for shot
-		isBallReady = SensorValue[ballSensorTop] < ballThreshold ? true : false;
+		isBallReady = SensorValue[ballSensorTop] < ballThreshold;
 
 		// check if RPM is suitable
-		isRPMReady = (targetRPM > (RPM - 50) && targetRPM != 0) ? true : false;
+		isRPMReady = (targetRPM > (RPM - 50) && targetRPM != 0);
 	}
 }
 

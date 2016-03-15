@@ -28,6 +28,7 @@
 #define ballThreshold 800	//**PLACEHOLDER**//
 #define nullThreshold 3000	//**PLACEHOLDER**//
 #define SONARThreshold 350
+#define integralThreshold 200
 #define rpmDelay 100
 
 int targetRPM = 0;
@@ -101,7 +102,7 @@ task usercontrol()
 {
 	//Task Startup
 	startTask(rpmCalc);
-	startTask(pidControl);
+	startTask(piControl);
 	startTask(motorControl);
 	startTask(ballInhibitor);
 

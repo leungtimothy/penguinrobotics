@@ -81,4 +81,6 @@ void driveAD (char* direction, int targetTicks)
 		// set previous error
 		previousError = error;
 	}
+	leftOutput = 0;
+	rightOutput = 0;
 }
