@@ -17,6 +17,9 @@ void driveAD (char* direction, int targetTicks)
 	int sigmaError = 0;
 	int deltaError = 0;
 
+	// boolean to check if robot is halfway to target
+	bool isHalfway = false;
+
 	// drive while target has not been reached
 	while ((abs(SensorValue[leftEncoder]) + abs(SensorValue[rightEncoder])) / 2 < targetTicks)
 	{
@@ -31,9 +34,19 @@ void driveAD (char* direction, int targetTicks)
 			sigmaError += error;															// integrate error
 			deltaError = error - previousError;								// differentiate error
 
-			// get feed-forward PID output
-			leftPower += error * kp + sigmaError * ki + deltaError * kd;
-			rightPower += error * kp + sigmaError * ki + deltaError * kd;
+			// use velocity PID algorithm to obtain acceleration curve, then switch to positional PID at target halfway point
+			if (isHalfway == false)
+			{
+				leftPower += error * kp + sigmaError * ki + deltaError * kd;
+				rightPower += error * kp + sigmaError * ki + deltaError * kd;
+				if ((EncoderR + EncoderL) / 2 > targetTicks)
+					isHalfway = true;
+			}
+			else
+			{
+				leftPower = error * kp + sigmaError * ki + deltaError * kd;
+				rightPower = error * kp + sigmaError * ki + deltaError * kd;
+			}
 		}
 
 		// when right side is faster than left side
@@ -51,10 +64,8 @@ void driveAD (char* direction, int targetTicks)
 		}
 
 		// clamp motor power in between 0 & 127
-		leftPower = leftPower > 127 ? 127 : leftPower;
-		leftPower = leftPower < 0 ? 0 : leftPower;
-		rightPower = rightPower > 127 ? 127 : rightPower;
-		rightPower = rightPower < 0 ? 0 : rightPower;
+		leftPower = leftPower > 127 ? 127 : leftPower < 0 ? 0 : leftPower;
+		rightPower = rightPower > 127 ? 127 : rightPower < 0 ? 0 : rightPower;
 
 		// set motor powers depending on direction parameter
 		if (direction == "forward")
@@ -83,4 +94,15 @@ void driveAD (char* direction, int targetTicks)
 	}
 	leftOutput = 0;
 	rightOutput = 0;
+}
+
+void shootBall (int noBalls)
+{
+	ballCount = 0;
+	while (ballCount != noBalls)
+	{
+		if (!isBallReady || (isBallReady && isRPMReady))
+			motor[Intake] = 127;
+	}
+	motor[Intake] = 0;
 }

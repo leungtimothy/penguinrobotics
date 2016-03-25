@@ -2,9 +2,9 @@
 #pragma config(Motor,  port2,           Intake,        tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           DriveL1,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           DriveR1,       tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           TowerM1,       tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port6,           TowerM2,       tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port7,           TowerM3,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port5,           TowerM1,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port6,           TowerM2,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port7,           TowerM3,       tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port8,           DriveL2,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           DriveR2,       tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port10,          DriveL3,       tmotorVex393_HBridge, openLoop)
@@ -23,6 +23,11 @@ int targetRPM = 0;
 int RPM = 0;
 int fwOutput = 0;
 int ballCount = 0;
+
+// motor sets
+int leftDrive = 0;
+int rightDrive = 0;
+int towerOutput = 0;
 
 bool ballReady = false;
 bool RPMReady = false;
@@ -96,21 +101,22 @@ task autonomous()
 
 task usercontrol()
 {
+	startTask(motorControl);
 	while (true)
 	{
 	  // Tank Drive w/ deadzone of 20
 	  if (vexRT[Ch3] > 20)
-	  	motor[DriveL1] = motor[DriveL2] = motor[DriveL3] = TrueSpeed[abs(vexRT[Ch3])];
+	  	leftDrive = TrueSpeed[abs(vexRT[Ch3])];
 		else if (vexRT[Ch3] < -20)
-			motor[DriveL1] = motor[DriveL2] = motor[DriveL3] = -TrueSpeed[abs(vexRT[Ch3])];
+			leftDrive = -TrueSpeed[abs(vexRT[Ch3])];
 		else
-			motor[DriveL1] = motor[DriveL2] = motor[DriveL3] = 0;
+			leftDrive = 0;
 		if (vexRT[Ch2] > 20)
-			motor[DriveR1] = motor[DriveR2] = TrueSpeed[abs(vexRT[Ch2])];
+			rightDrive = TrueSpeed[abs(vexRT[Ch2])];
 		else if (vexRT[Ch2] < -20)
-			motor[DriveR1] = motor[DriveR2] = -TrueSpeed[abs(vexRT[Ch2])];
+			rightDrive = -TrueSpeed[abs(vexRT[Ch2])];
 		else
-			motor[DriveR1] = motor[DriveR2] = 0;
+			rightDrive = 0;
 
 	  // Front Intake Control
 		if (vexRT[Btn6U])
@@ -130,16 +136,14 @@ task usercontrol()
 
 		// Tower Motor Control
 		if (vexRT[Btn8L]) // control flywheel
-			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 60;
+			towerOutput = 60;
 		else if (vexRT[Btn8R])
-			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 75;
+			towerOutput = 75;
 		else if (vexRT[Btn8U])
-			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 127;
+			towerOutput = 127;
 		else if (vexRT[Btn7L]) // control puncher
-			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = -127;
+			towerOutput = -127;
 		else if (vexRT[Btn8D] || vexRT[Btn7L] == false)
-		{
-			motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = 0;
-		}
+			towerOutput = 0;
 	}
 }

@@ -13,6 +13,16 @@
 //	}
 //}
 
+task motorControl()
+{
+	while(true)
+	{
+		motor[DriveL1] = motor[DriveL2] = motor[DriveL3] = leftDrive;
+		motor[DriveR1] = motor[DriveR2] = rightDrive;
+		motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = towerOutput;
+	}
+}
+
 // PID Flywheel Velocity Control
 task pidControl()
 {
@@ -54,11 +64,4 @@ task pidControl()
 			//	writeDebugStream("Output: %i\t\tP: %i\t\tD: %i\t\tRPM: %i\n", PIDOutput, error, deltaError);
 		}
 	}
-}
-
-// Launcher Motor Controller
-task fwControl()
-{
-	while (true)
-		motor[TowerM1] = motor[TowerM2] = motor[TowerM3] = fwOutput;	// set flywheel speed
 }
