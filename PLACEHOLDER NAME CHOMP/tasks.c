@@ -7,7 +7,7 @@ task rpmCalculation()
 		wait1Msec(rpmDelay);
 
 		// conversion: 1 revolution per 120 ticks, 1000 milliseconds per 1 seconds, 60 seconds per 1 minute
-		RPM = SensorValue[fwEncoder] * 500 / rpmDelay;
+		RPM = abs(SensorValue[fwEncoder]) * 500 / rpmDelay;
 
 		isNewRPM = true;
 	}
@@ -17,9 +17,9 @@ task rpmCalculation()
 task pidControl()
 {
 	// initialize constants & variables
-	const float kp = 0.00025;
-	const float ki = 0.0025;
-	const float kd = 0.075;
+	const float kp = 0.000075;
+	const float ki = 0.00075;
+	const float kd = 0.03;
 	float PIDOutput = 0;
 	int error = 0;
 	int previousError;
@@ -35,7 +35,7 @@ task pidControl()
 			{
 				error = targetRPM - RPM; 						// find error
 				deltaError = error - previousError;	// differentiate error
-				// integrate errors when error is not changing fast enough & outside of derivative control zone
+				// integrate errors when error is not changing fast enough
 				if (abs(deltaError) < deltaThreshold)
 					sigmaError += error;
 				else
@@ -52,10 +52,9 @@ task pidControl()
 				previousError = error;							// set new previous error
 
 				datalogDataGroupStart();
-				datalogAddValue(0, nSysTime);
-				datalogAddValue(1, fwPower);
-				datalogAddValue(2, RPM);
-				datalogAddValue(3, targetRPM);
+				datalogAddValue(0, fwPower);
+				datalogAddValue(1, RPM);
+				datalogAddValue(2, targetRPM);
 				datalogDataGroupEnd();
 			}
 			else
